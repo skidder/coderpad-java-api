@@ -1,2 +1,2 @@
 # coderpad-java-api
-Java API for the Coderpad service
+**UNOFFICIAL** Java API for the Coderpad service
