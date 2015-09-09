@@ -15,13 +15,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
-import io.kidder.coderpad.request.CreatePadRequest;
 import io.kidder.coderpad.request.ListPadsSortingOrder;
 import io.kidder.coderpad.request.ListPadsSortingTerm;
+import io.kidder.coderpad.request.PadRequest;
 import io.kidder.coderpad.response.ListPadsResponse;
 import io.kidder.coderpad.response.PadResponse;
 
 /**
+ * Client for the Coderpad API.
+ * 
  * @author Scott Kidder
  *
  */
@@ -67,31 +69,43 @@ public class CoderpadClient {
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(ListPadsResponse.class);
     }
 
-    public void createPad(CreatePadRequest request) {
-	// set form fields, using defaults when appropriate
-	Form form = new Form();
-	if (request.getTitle() != null) {
-	    form.param("title", request.getTitle());
-	}
-	if (request.getLanguage() != null) {
-	    form.param("language", request.getLanguage().toString());
-	}
-	if (request.getContents() != null && request.getContents().length() > 0) {
-	    form.param("contents", request.getContents());
-	}
-	if (request.isLocked()) {
-	    form.param("locked", Boolean.TRUE.toString());
-	}
-	if (request.isPrivatePad()) {
-	    form.param("private", Boolean.TRUE.toString());
-	}
-	if (request.isExecutionEnabled() == false) {
-	    form.param("execution_enabled", Boolean.FALSE.toString());
-	}
-
+    /**
+     * Create a new pad with the attributes specified in the request.
+     * 
+     * @param request
+     * @return
+     */
+    public PadResponse createPad(PadRequest request) {
+	final Form form = createFormForPadRequest(request);
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	client.target(this.baseUrl).path("/pads/").request().header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA));
+	return client.target(this.baseUrl).path("/pads/").request()
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
+		.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA), PadResponse.class);
+    }
+
+    /**
+     * Update an existing pad.
+     * 
+     * @param id
+     * @param request
+     */
+    public void updatePad(String id, PadRequest request) {
+	final Form form = createFormForPadRequest(request);
+	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+	client.target(this.baseUrl).path("/pads/" + id).request()
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
+		.put(Entity.entity(form, MediaType.MULTIPART_FORM_DATA));
+    }
+
+    /**
+     * Delete an existing pad.
+     * 
+     * @param id
+     */
+    public void deletePad(String id) {
+	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+	client.target(this.baseUrl).path("/pads/" + id).request()
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).delete();
     }
 
     /**
@@ -131,6 +145,36 @@ public class CoderpadClient {
 		.queryParam("sort", sortingTermString + "," + sortingOrderString)
 		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
 		.get(ListPadsResponse.class);
+    }
+
+    /**
+     * Create a form with the attributes given in the request.
+     * 
+     * @param request
+     * @return
+     */
+    private Form createFormForPadRequest(PadRequest request) {
+	// set form fields, using defaults when appropriate
+	Form form = new Form();
+	if (request.getTitle() != null) {
+	    form.param("title", request.getTitle());
+	}
+	if (request.getLanguage() != null) {
+	    form.param("language", request.getLanguage().toString());
+	}
+	if (request.getContents() != null && request.getContents().length() > 0) {
+	    form.param("contents", request.getContents());
+	}
+	if (request.isLocked()) {
+	    form.param("locked", Boolean.TRUE.toString());
+	}
+	if (request.isPrivatePad()) {
+	    form.param("private", Boolean.TRUE.toString());
+	}
+	if (request.isExecutionEnabled() == false) {
+	    form.param("execution_enabled", Boolean.FALSE.toString());
+	}
+	return form;
     }
 
     private String generateTokenHeaderValue() {

@@ -4,7 +4,7 @@ package io.kidder.coderpad.request;
  * @author Scott Kidder
  *
  */
-public class CreatePadRequest {
+public class PadRequest {
     private String title;
     private PadLanguage language;
     private String contents;
@@ -62,7 +62,7 @@ public class CreatePadRequest {
 
     @Override
     public String toString() {
-	return "CreatePadRequest [title=" + title + ", language=" + language + ", contents=" + contents + ", locked="
+	return "PadRequest [title=" + title + ", language=" + language + ", contents=" + contents + ", locked="
 	       + locked + ", privatePad=" + privatePad + ", executionEnabled=" + executionEnabled + "]";
     }
 }
