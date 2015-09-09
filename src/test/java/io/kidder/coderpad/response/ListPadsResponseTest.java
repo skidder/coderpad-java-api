@@ -2,6 +2,7 @@ package io.kidder.coderpad.response;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.kidder.coderpad.request.PadLanguage;
 
 public class ListPadsResponseTest {
 
@@ -37,6 +40,7 @@ public class ListPadsResponseTest {
 	assertNotNull(pad.getCreatedAt());
 	assertNotNull(pad.getUpdatedAt());
 	assertEquals(5, pad.getEvents().size());
+	assertTrue(PadLanguage.ruby.equals(pad.getLanguage()));
     }
 
 }

@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.kidder.coderpad.request.PadLanguage;
+
 public class PadResponseTest {
 
     @Before
@@ -33,6 +35,7 @@ public class PadResponseTest {
 	assertNotNull(response.getCreatedAt());
 	assertNotNull(response.getUpdatedAt());
 	assertEquals(5, response.getEvents().size());
+	assertTrue(PadLanguage.ruby.equals(response.getLanguage()));
     }
 
 }

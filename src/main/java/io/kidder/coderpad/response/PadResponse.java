@@ -6,6 +6,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
+import io.kidder.coderpad.request.PadLanguage;
+
 /**
  * @author Scott Kidder
  *
@@ -14,7 +16,7 @@ public class PadResponse extends BaseResponse {
 
     private String id;
     private String title;
-    private String language;
+    private PadLanguage language;
     private List<String> participants = Lists.newArrayList();
     private String contents;
     private List<String> events = Lists.newArrayList();
@@ -52,11 +54,11 @@ public class PadResponse extends BaseResponse {
 	this.title = title;
     }
 
-    public String getLanguage() {
+    public PadLanguage getLanguage() {
 	return language;
     }
 
-    public void setLanguage(String language) {
+    public void setLanguage(PadLanguage language) {
 	this.language = language;
     }
 

@@ -142,33 +142,13 @@ public class CoderpadClient {
      * @return
      */
     public ListPadsResponse listPads(ListPadsSortingTerm sortingTerm, ListPadsSortingOrder sortingOrder) {
-	final String sortingTermString;
-	switch (sortingTerm) {
-	case CREATED_AT:
-	    sortingTermString = "created_at";
-	    break;
-	case UPDATED_AT:
-	    sortingTermString = "updated_at";
-	    break;
-	default:
-	    throw new IllegalArgumentException("Unrecognized sorting term in listPads argument");
-	}
-
-	final String sortingOrderString;
-	switch (sortingOrder) {
-	case ASCENDING:
-	    sortingOrderString = "asc";
-	    break;
-	case DESCENDING:
-	    sortingOrderString = "desc";
-	    break;
-	default:
-	    throw new IllegalArgumentException("Unrecognized sorting order in listPads argument");
+	if (sortingTerm == null || sortingOrder == null) {
+	    throw new IllegalArgumentException("Sorting term and/or order were unexpectedly null");
 	}
 
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	return client.target(this.baseUrl).path("/pads/")
-		.queryParam("sort", sortingTermString + "," + sortingOrderString)
+		.queryParam("sort", sortingTerm.toString() + "," + sortingOrder.toString())
 		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
 		.get(ListPadsResponse.class);
     }
