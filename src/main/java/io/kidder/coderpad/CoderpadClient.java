@@ -5,6 +5,8 @@ package io.kidder.coderpad;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -13,6 +15,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
+import io.kidder.coderpad.request.CreatePadRequest;
+import io.kidder.coderpad.request.ListPadsSortingOrder;
+import io.kidder.coderpad.request.ListPadsSortingTerm;
 import io.kidder.coderpad.response.ListPadsResponse;
 import io.kidder.coderpad.response.PadResponse;
 
@@ -22,6 +27,7 @@ import io.kidder.coderpad.response.PadResponse;
  */
 public class CoderpadClient {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String CODERPAD_BASE_URL = "https://coderpad.io/api";
     private String authenticationToken;
     private String baseUrl;
@@ -46,9 +52,8 @@ public class CoderpadClient {
      */
     public PadResponse getPad(String padId) {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/" + padId).queryParam("_key", this.authenticationToken)
-		.request(MediaType.APPLICATION_JSON_TYPE).header("Authorization", generateTokenHeaderValue())
-		.get(PadResponse.class);
+	return client.target(this.baseUrl).path("/pads/" + padId).request(MediaType.APPLICATION_JSON_TYPE)
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(PadResponse.class);
     }
 
     /**
@@ -58,9 +63,35 @@ public class CoderpadClient {
      */
     public ListPadsResponse listPads() {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/").queryParam("_key", this.authenticationToken)
-		.request(MediaType.APPLICATION_JSON_TYPE).header("Authorization", generateTokenHeaderValue())
-		.get(ListPadsResponse.class);
+	return client.target(this.baseUrl).path("/pads/").request(MediaType.APPLICATION_JSON_TYPE)
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(ListPadsResponse.class);
+    }
+
+    public void createPad(CreatePadRequest request) {
+	// set form fields, using defaults when appropriate
+	Form form = new Form();
+	if (request.getTitle() != null) {
+	    form.param("title", request.getTitle());
+	}
+	if (request.getLanguage() != null) {
+	    form.param("language", request.getLanguage().toString());
+	}
+	if (request.getContents() != null && request.getContents().length() > 0) {
+	    form.param("contents", request.getContents());
+	}
+	if (request.isLocked()) {
+	    form.param("locked", Boolean.TRUE.toString());
+	}
+	if (request.isPrivatePad()) {
+	    form.param("private", Boolean.TRUE.toString());
+	}
+	if (request.isExecutionEnabled() == false) {
+	    form.param("execution_enabled", Boolean.FALSE.toString());
+	}
+
+	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+	client.target(this.baseUrl).path("/pads/").request().header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
+		.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA));
     }
 
     /**
@@ -70,7 +101,7 @@ public class CoderpadClient {
      * @param sortingOrder
      * @return
      */
-    public ListPadsResponse listPads(SortingTerm sortingTerm, SortingOrder sortingOrder) {
+    public ListPadsResponse listPads(ListPadsSortingTerm sortingTerm, ListPadsSortingOrder sortingOrder) {
 	final String sortingTermString;
 	switch (sortingTerm) {
 	case CREATED_AT:
@@ -98,8 +129,8 @@ public class CoderpadClient {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	return client.target(this.baseUrl).path("/pads/")
 		.queryParam("sort", sortingTermString + "," + sortingOrderString)
-		.queryParam("_key", this.authenticationToken).request(MediaType.APPLICATION_JSON_TYPE)
-		.header("Authorization", generateTokenHeaderValue()).get(ListPadsResponse.class);
+		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
+		.get(ListPadsResponse.class);
     }
 
     private String generateTokenHeaderValue() {
