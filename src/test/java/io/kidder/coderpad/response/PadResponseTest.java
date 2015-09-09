@@ -27,6 +27,8 @@ public class PadResponseTest {
 	PadResponse response = mapper.readValue(new File("src/test/resources/get_pad_response.json"), PadResponse.class);
 	assertNotNull(response);
 
+	assertEquals("OK", response.getStatus());
+	assertNull(response.getMessage());
 	assertEquals("5.times do\n  puts 'Hello, World!'\nend\n", response.getContents());
 	assertNotNull(response.getCreatedAt());
 	assertNotNull(response.getUpdatedAt());

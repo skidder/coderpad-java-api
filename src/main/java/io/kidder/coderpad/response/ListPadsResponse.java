@@ -5,20 +5,11 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
-public class ListPadsResponse {
-    private String status;
+public class ListPadsResponse extends BaseResponse {
     private List<PadResponse> pads = Lists.newArrayList();
     @JsonProperty("next_page")
     private String nextPageUrl;
     private long total;
-
-    public String getStatus() {
-	return status;
-    }
-
-    public void setStatus(String status) {
-	this.status = status;
-    }
 
     public List<PadResponse> getPads() {
 	return pads;
@@ -46,7 +37,6 @@ public class ListPadsResponse {
 
     @Override
     public String toString() {
-	return "ListPadsResponse [status=" + status + ", pads=" + pads + ", nextPageUrl=" + nextPageUrl + ", total="
-	       + total + "]";
+	return "ListPadsResponse [pads=" + pads + ", nextPageUrl=" + nextPageUrl + ", total=" + total + "]";
     }
 }

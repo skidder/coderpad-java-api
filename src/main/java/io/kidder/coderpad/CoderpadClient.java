@@ -18,6 +18,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.kidder.coderpad.request.ListPadsSortingOrder;
 import io.kidder.coderpad.request.ListPadsSortingTerm;
 import io.kidder.coderpad.request.PadRequest;
+import io.kidder.coderpad.response.BaseResponse;
 import io.kidder.coderpad.response.ListPadsResponse;
 import io.kidder.coderpad.response.PadResponse;
 
@@ -29,6 +30,7 @@ import io.kidder.coderpad.response.PadResponse;
  */
 public class CoderpadClient {
 
+    private static final String OK_STATUS = "OK";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String CODERPAD_BASE_URL = "https://coderpad.io/api";
     private String authenticationToken;
@@ -51,22 +53,33 @@ public class CoderpadClient {
      * 
      * @param padId
      * @return
+     * @throws CoderpadException
      */
-    public PadResponse getPad(String padId) {
+    public PadResponse getPad(String padId) throws CoderpadException {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/" + padId).request(MediaType.APPLICATION_JSON_TYPE)
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(PadResponse.class);
+	PadResponse response = client.target(this.baseUrl).path("/pads/" + padId)
+		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
+		.get(PadResponse.class);
+	if (!OK_STATUS.equals(response.getStatus())) {
+	    throw new CoderpadException(response.getMessage());
+	}
+	return response;
     }
 
     /**
      * List pads using the default sort order (created_at,desc).
      * 
      * @return
+     * @throws CoderpadException
      */
-    public ListPadsResponse listPads() {
+    public ListPadsResponse listPads() throws CoderpadException {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/").request(MediaType.APPLICATION_JSON_TYPE)
+	ListPadsResponse response = client.target(this.baseUrl).path("/pads/").request(MediaType.APPLICATION_JSON_TYPE)
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(ListPadsResponse.class);
+	if (!OK_STATUS.equals(response.getStatus())) {
+	    throw new CoderpadException(response.getMessage());
+	}
+	return response;
     }
 
     /**
@@ -74,13 +87,18 @@ public class CoderpadClient {
      * 
      * @param request
      * @return
+     * @throws CoderpadException
      */
-    public PadResponse createPad(PadRequest request) {
+    public PadResponse createPad(PadRequest request) throws CoderpadException {
 	final Form form = createFormForPadRequest(request);
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/").request()
+	PadResponse response = client.target(this.baseUrl).path("/pads/").request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
 		.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA), PadResponse.class);
+	if (!OK_STATUS.equals(response.getStatus())) {
+	    throw new CoderpadException(response.getMessage());
+	}
+	return response;
     }
 
     /**
@@ -88,24 +106,32 @@ public class CoderpadClient {
      * 
      * @param id
      * @param request
+     * @throws CoderpadException
      */
-    public void updatePad(String id, PadRequest request) {
+    public void updatePad(String id, PadRequest request) throws CoderpadException {
 	final Form form = createFormForPadRequest(request);
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	client.target(this.baseUrl).path("/pads/" + id).request()
+	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.put(Entity.entity(form, MediaType.MULTIPART_FORM_DATA));
+		.put(Entity.entity(form, MediaType.MULTIPART_FORM_DATA), BaseResponse.class);
+	if (!OK_STATUS.equals(response.getStatus())) {
+	    throw new CoderpadException(response.getMessage());
+	}
     }
 
     /**
      * Delete an existing pad.
      * 
      * @param id
+     * @throws CoderpadException
      */
-    public void deletePad(String id) {
+    public void deletePad(String id) throws CoderpadException {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	client.target(this.baseUrl).path("/pads/" + id).request()
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).delete();
+	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
+		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).delete(BaseResponse.class);
+	if (!OK_STATUS.equals(response.getStatus())) {
+	    throw new CoderpadException(response.getMessage());
+	}
     }
 
     /**

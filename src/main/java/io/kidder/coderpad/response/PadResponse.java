@@ -10,9 +10,8 @@ import com.google.common.collect.Lists;
  * @author Scott Kidder
  *
  */
-public class PadResponse {
+public class PadResponse extends BaseResponse {
 
-    private String status;
     private String id;
     private String title;
     private String language;
@@ -36,14 +35,6 @@ public class PadResponse {
     private String historyUrl;
     @JsonProperty("hangout")
     private String hangoutUrl;
-
-    public String getStatus() {
-	return status;
-    }
-
-    public void setStatus(String status) {
-	this.status = status;
-    }
 
     public String getId() {
 	return id;
@@ -167,17 +158,10 @@ public class PadResponse {
 
     @Override
     public String toString() {
-	return "PadResponse [status=" + status + ", id=" + id + ", title=" + title + ", language=" + language
-	       + ", participants=" + participants + ", contents=" + contents + ", events=" + events + ", locked="
-	       + locked + ", privatePad=" + privatePad + ", executionEnabled=" + executionEnabled + ", createdAt="
-	       + createdAt + ", updatedAt=" + updatedAt + ", editingUrl=" + editingUrl + ", playbackUrl=" + playbackUrl
-	       + ", historyUrl=" + historyUrl + ", hangoutUrl=" + hangoutUrl + ", getStatus()=" + getStatus()
-	       + ", getId()=" + getId() + ", getTitle()=" + getTitle() + ", getLanguage()=" + getLanguage()
-	       + ", getParticipants()=" + getParticipants() + ", getContents()=" + getContents() + ", getEvents()="
-	       + getEvents() + ", isLocked()=" + isLocked() + ", isPrivatePad()=" + isPrivatePad()
-	       + ", isExecutionEnabled()=" + isExecutionEnabled() + ", getCreatedAt()=" + getCreatedAt()
-	       + ", getUpdatedAt()=" + getUpdatedAt() + ", getEditingUrl()=" + getEditingUrl() + ", getPlaybackUrl()="
-	       + getPlaybackUrl() + ", getHistoryUrl()=" + getHistoryUrl() + ", getHangoutUrl()=" + getHangoutUrl()
-	       + ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + ", toString()=" + super.toString() + "]";
+	return "PadResponse [id=" + id + ", title=" + title + ", language=" + language + ", participants="
+	       + participants + ", contents=" + contents + ", events=" + events + ", locked=" + locked + ", privatePad="
+	       + privatePad + ", executionEnabled=" + executionEnabled + ", createdAt=" + createdAt + ", updatedAt="
+	       + updatedAt + ", editingUrl=" + editingUrl + ", playbackUrl=" + playbackUrl + ", historyUrl="
+	       + historyUrl + ", hangoutUrl=" + hangoutUrl + "]";
     }
 }
