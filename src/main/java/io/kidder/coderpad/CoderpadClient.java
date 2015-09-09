@@ -94,7 +94,7 @@ public class CoderpadClient {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	PadResponse response = client.target(this.baseUrl).path("/pads/").request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.post(Entity.entity(form, MediaType.MULTIPART_FORM_DATA), PadResponse.class);
+		.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED), PadResponse.class);
 	if (!OK_STATUS.equals(response.getStatus())) {
 	    throw new CoderpadException(response.getMessage());
 	}
@@ -113,7 +113,7 @@ public class CoderpadClient {
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.put(Entity.entity(form, MediaType.MULTIPART_FORM_DATA), BaseResponse.class);
+		.put(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED), BaseResponse.class);
 	if (!OK_STATUS.equals(response.getStatus())) {
 	    throw new CoderpadException(response.getMessage());
 	}
