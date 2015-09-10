@@ -22,7 +22,7 @@
   </licenses>
   <scm>
     <url>https://github.com/skidder/coderpad-java-api.git</url>
-  </scm>  
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -34,6 +34,18 @@
           <target>1.7</target>
           <encoding>UTF-8</encoding>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
