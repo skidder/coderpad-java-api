@@ -69,6 +69,7 @@
           <alias>${keystore.alias}</alias>
           <storepass>${keystore.store.password}</storepass>
           <keypass>${keystore.key.password}</keypass>
+          <skip>${signing.disabled}</skip>
         </configuration>
         <executions>
           <execution>
@@ -132,6 +133,7 @@
     </repository>
   </repositories>
   <properties>
+  	<signing.disabled>true</signing.disabled>
     <keystore.path>cert/temp.keystore</keystore.path>
     <keystore.type>JKS</keystore.type>
     <keystore.alias>maven-sonatype</keystore.alias>

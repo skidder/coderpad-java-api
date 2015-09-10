@@ -3,6 +3,23 @@
 
 Unofficial Java client API for the [Coderpad](https://coderpad.io/) service
 
+## Maven
+```xml
+<dependency>
+  <groupId>io.kidder</groupId>
+  <artifactId>coderpad-java-api</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
+## Gradle
+```
+    dependencies {
+        compile(
+        ...
+                'io.kidder:coderpad-java-api:1.0.0',
+```
+
 ## Usage
 
 ### Create a Client Instance
