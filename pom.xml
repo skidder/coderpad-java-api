@@ -4,12 +4,12 @@
   <groupId>io.kidder</groupId>
   <artifactId>coderpad-java-api</artifactId>
   <version>1.0.0</version>
-  <contributors>
-    <contributor>
+  <developers>
+    <developer>
       <name>Scott Kidder</name>
       <timezone>-7</timezone>
-    </contributor>
-  </contributors>
+    </developer>
+  </developers>
   <name>Coderpad Java API</name>
   <description>Java client API for the Coderpad service</description>
   <url>https://github.com/skidder/coderpad-java-api</url>
@@ -43,6 +43,32 @@
             <id>attach-sources</id>
             <goals>
               <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jarsigner-plugin</artifactId>
+        <version>1.4</version>
+        <configuration>
+          <storetype>${keystore.type}</storetype>
+          <keystore>${keystore.path}</keystore>
+          <alias>${keystore.alias}</alias>
+          <storepass>${keystore.store.password}</storepass>
+          <keypass>${keystore.key.password}</keypass>
+        </configuration>
+        <executions>
+          <execution>
+            <id>sign</id>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
             </goals>
           </execution>
         </executions>
@@ -93,4 +119,12 @@
       <url>http://mirrors.ibiblio.org/pub/mirrors/maven2</url>
     </repository>
   </repositories>
+  <properties>
+    <keystore.path>cert/temp.keystore</keystore.path>
+    <keystore.type>JKS</keystore.type>
+    <keystore.alias>maven-sonatype</keystore.alias>
+    <keystore.password>dev_password</keystore.password>
+    <keystore.store.password>${keystore.password}</keystore.store.password>
+    <keystore.key.password>${keystore.password}</keystore.key.password>
+  </properties>
 </project>
