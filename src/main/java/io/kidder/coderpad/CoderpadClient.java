@@ -6,8 +6,8 @@ package io.kidder.coderpad;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.glassfish.jersey.client.ClientConfig;
 
@@ -45,7 +45,7 @@ public class CoderpadClient {
 	this.authenticationToken = authenticationToken;
 	this.baseUrl = baseUrl;
 	jacksonJsonProvider = new JacksonJaxbJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-								      false);
+		false);
     }
 
     /**
@@ -90,11 +90,11 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public PadResponse createPad(PadRequest request) throws CoderpadException {
-	final Form form = createFormForPadRequest(request);
+	final MultivaluedHashMap<String, String> form = createMultiValuedMapForPadRequest(request);
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	PadResponse response = client.target(this.baseUrl).path("/pads/").request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED), PadResponse.class);
+		.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), PadResponse.class);
 	if (!OK_STATUS.equals(response.getStatus())) {
 	    throw new CoderpadException(response.getMessage());
 	}
@@ -109,11 +109,11 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public void updatePad(String id, PadRequest request) throws CoderpadException {
-	final Form form = createFormForPadRequest(request);
+	final MultivaluedHashMap<String, String> form = createMultiValuedMapForPadRequest(request);
 	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
 	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
 		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.put(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED), BaseResponse.class);
+		.put(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), BaseResponse.class);
 	if (!OK_STATUS.equals(response.getStatus())) {
 	    throw new CoderpadException(response.getMessage());
 	}
@@ -154,31 +154,31 @@ public class CoderpadClient {
     }
 
     /**
-     * Create a form with the attributes given in the request.
+     * Create a multi-valued hashmap with the attributes given in the request.
      * 
      * @param request
      * @return
      */
-    private Form createFormForPadRequest(PadRequest request) {
+    private MultivaluedHashMap<String, String> createMultiValuedMapForPadRequest(PadRequest request) {
 	// set form fields, using defaults when appropriate
-	Form form = new Form();
+	MultivaluedHashMap<String, String> form = new MultivaluedHashMap<String, String>();
 	if (request.getTitle() != null) {
-	    form.param("title", request.getTitle());
+	    form.add("title", request.getTitle());
 	}
 	if (request.getLanguage() != null) {
-	    form.param("language", request.getLanguage().toString());
+	    form.add("language", request.getLanguage().toString());
 	}
 	if (request.getContents() != null && request.getContents().length() > 0) {
-	    form.param("contents", request.getContents());
+	    form.add("contents", request.getContents());
 	}
 	if (request.isLocked()) {
-	    form.param("locked", Boolean.TRUE.toString());
+	    form.add("locked", Boolean.TRUE.toString());
 	}
 	if (request.isPrivatePad()) {
-	    form.param("private", Boolean.TRUE.toString());
+	    form.add("private", Boolean.TRUE.toString());
 	}
 	if (request.isExecutionEnabled() == false) {
-	    form.param("execution_enabled", Boolean.FALSE.toString());
+	    form.add("execution_enabled", Boolean.FALSE.toString());
 	}
 	return form;
     }
