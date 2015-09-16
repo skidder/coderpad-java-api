@@ -217,7 +217,7 @@ public class CoderpadClient {
     /**
      * Delete an existing pad.
      * 
-     * @param id
+     * @param padId
      * @throws CoderpadException
      */
     public void deletePad(String padId) throws CoderpadException {
