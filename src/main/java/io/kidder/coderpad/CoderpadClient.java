@@ -3,17 +3,25 @@
  */
 package io.kidder.coderpad;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.glassfish.jersey.client.ClientConfig;
+import org.apache.http.Consts;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.kidder.coderpad.request.ListPadsSortingOrder;
 import io.kidder.coderpad.request.ListPadsSortingTerm;
@@ -35,7 +43,7 @@ public class CoderpadClient {
     private static final String CODERPAD_BASE_URL = "https://coderpad.io/api";
     private String authenticationToken;
     private String baseUrl;
-    private JacksonJsonProvider jacksonJsonProvider;
+    private ObjectMapper objectMapper;
 
     public CoderpadClient(String authenticationToken) {
 	this(authenticationToken, CODERPAD_BASE_URL);
@@ -44,8 +52,7 @@ public class CoderpadClient {
     public CoderpadClient(String authenticationToken, String baseUrl) {
 	this.authenticationToken = authenticationToken;
 	this.baseUrl = baseUrl;
-	jacksonJsonProvider = new JacksonJaxbJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-		false);
+	objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     /**
@@ -56,14 +63,35 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public PadResponse getPad(String padId) throws CoderpadException {
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	PadResponse response = client.target(this.baseUrl).path("/pads/" + padId)
-		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.get(PadResponse.class);
-	if (!OK_STATUS.equals(response.getStatus())) {
-	    throw new CoderpadException(response.getMessage());
+	final HttpGet getRequest = new HttpGet(this.baseUrl + "/pads/" + padId);
+	getRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	getRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse getResponse = null;
+	try {
+	    getResponse = httpclient.execute(getRequest);
+	    final HttpEntity responseEntity = getResponse.getEntity();
+	    if (responseEntity != null) {
+		final PadResponse getPadResponse = objectMapper.readValue(responseEntity.getContent(),
+			PadResponse.class);
+		if (!OK_STATUS.equals(getPadResponse.getStatus())) {
+		    throw new CoderpadException(getPadResponse.getMessage());
+		}
+		return getPadResponse;
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error getting pad on Coderpad", e);
+	} finally {
+	    try {
+		if (getResponse != null)
+		    getResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
 	}
-	return response;
     }
 
     /**
@@ -73,13 +101,35 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public ListPadsResponse listPads() throws CoderpadException {
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	ListPadsResponse response = client.target(this.baseUrl).path("/pads/").request(MediaType.APPLICATION_JSON_TYPE)
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).get(ListPadsResponse.class);
-	if (!OK_STATUS.equals(response.getStatus())) {
-	    throw new CoderpadException(response.getMessage());
+	final HttpGet getRequest = new HttpGet(this.baseUrl + "/pads/");
+	getRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	getRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse getResponse = null;
+	try {
+	    getResponse = httpclient.execute(getRequest);
+	    final HttpEntity responseEntity = getResponse.getEntity();
+	    if (responseEntity != null) {
+		final ListPadsResponse listPadsResponse = objectMapper.readValue(responseEntity.getContent(),
+			ListPadsResponse.class);
+		if (!OK_STATUS.equals(listPadsResponse.getStatus())) {
+		    throw new CoderpadException(listPadsResponse.getMessage());
+		}
+		return listPadsResponse;
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error listing pads on Coderpad", e);
+	} finally {
+	    try {
+		if (getResponse != null)
+		    getResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
 	}
-	return response;
     }
 
     /**
@@ -90,15 +140,37 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public PadResponse createPad(PadRequest request) throws CoderpadException {
-	final MultivaluedHashMap<String, String> form = createMultiValuedMapForPadRequest(request);
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	PadResponse response = client.target(this.baseUrl).path("/pads/").request()
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), PadResponse.class);
-	if (!OK_STATUS.equals(response.getStatus())) {
-	    throw new CoderpadException(response.getMessage());
+	final List<NameValuePair> form = createHttpFormForPadRequest(request);
+	final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
+	final HttpPost postRequest = new HttpPost(this.baseUrl + "/pads");
+	postRequest.setEntity(entity);
+	postRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	postRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse postResponse = null;
+	try {
+	    postResponse = httpclient.execute(postRequest);
+	    final HttpEntity responseEntity = postResponse.getEntity();
+	    if (responseEntity != null) {
+		final PadResponse padResponse = objectMapper.readValue(responseEntity.getContent(), PadResponse.class);
+		if (!OK_STATUS.equals(padResponse.getStatus())) {
+		    throw new CoderpadException(padResponse.getMessage());
+		}
+		return padResponse;
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error creating pad on Coderpad", e);
+	} finally {
+	    try {
+		if (postResponse != null)
+		    postResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
 	}
-	return response;
     }
 
     /**
@@ -109,13 +181,36 @@ public class CoderpadClient {
      * @throws CoderpadException
      */
     public void updatePad(String id, PadRequest request) throws CoderpadException {
-	final MultivaluedHashMap<String, String> form = createMultiValuedMapForPadRequest(request);
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.put(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), BaseResponse.class);
-	if (!OK_STATUS.equals(response.getStatus())) {
-	    throw new CoderpadException(response.getMessage());
+	final List<NameValuePair> form = createHttpFormForPadRequest(request);
+	final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
+	final HttpPut putRequest = new HttpPut(this.baseUrl + "/pads");
+	putRequest.setEntity(entity);
+	putRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	putRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse putResponse = null;
+	try {
+	    putResponse = httpclient.execute(putRequest);
+	    final HttpEntity responseEntity = putResponse.getEntity();
+	    if (responseEntity != null) {
+		final BaseResponse padResponse = objectMapper.readValue(responseEntity.getContent(),
+			BaseResponse.class);
+		if (!OK_STATUS.equals(padResponse.getStatus())) {
+		    throw new CoderpadException(padResponse.getMessage());
+		}
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad while updating pad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error updating pad", e);
+	} finally {
+	    try {
+		if (putResponse != null)
+		    putResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
 	}
     }
 
@@ -125,12 +220,34 @@ public class CoderpadClient {
      * @param id
      * @throws CoderpadException
      */
-    public void deletePad(String id) throws CoderpadException {
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	BaseResponse response = client.target(this.baseUrl).path("/pads/" + id).request()
-		.header(AUTHORIZATION_HEADER, generateTokenHeaderValue()).delete(BaseResponse.class);
-	if (!OK_STATUS.equals(response.getStatus())) {
-	    throw new CoderpadException(response.getMessage());
+    public void deletePad(String padId) throws CoderpadException {
+	final HttpDelete deleteRequest = new HttpDelete(this.baseUrl + "/pads/" + padId);
+	deleteRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	deleteRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse deleteResponse = null;
+	try {
+	    deleteResponse = httpclient.execute(deleteRequest);
+	    final HttpEntity responseEntity = deleteResponse.getEntity();
+	    if (responseEntity != null) {
+		final PadResponse getPadResponse = objectMapper.readValue(responseEntity.getContent(),
+			PadResponse.class);
+		if (!OK_STATUS.equals(getPadResponse.getStatus())) {
+		    throw new CoderpadException(getPadResponse.getMessage());
+		}
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error getting pad on Coderpad", e);
+	} finally {
+	    try {
+		if (deleteResponse != null)
+		    deleteResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
 	}
     }
 
@@ -140,17 +257,44 @@ public class CoderpadClient {
      * @param sortingTerm
      * @param sortingOrder
      * @return
+     * @throws CoderpadException
      */
-    public ListPadsResponse listPads(ListPadsSortingTerm sortingTerm, ListPadsSortingOrder sortingOrder) {
+    public ListPadsResponse listPads(ListPadsSortingTerm sortingTerm, ListPadsSortingOrder sortingOrder)
+	    throws CoderpadException {
 	if (sortingTerm == null || sortingOrder == null) {
 	    throw new IllegalArgumentException("Sorting term and/or order were unexpectedly null");
 	}
 
-	final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
-	return client.target(this.baseUrl).path("/pads/")
-		.queryParam("sort", sortingTerm.toString() + "," + sortingOrder.toString())
-		.request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION_HEADER, generateTokenHeaderValue())
-		.get(ListPadsResponse.class);
+	final HttpGet getRequest = new HttpGet(
+		this.baseUrl + "/pads/?sort=" + sortingTerm.toString() + "," + sortingOrder.toString());
+	getRequest.addHeader(AUTHORIZATION_HEADER, generateTokenHeaderValue());
+	getRequest.setHeader("Accept", "application/json");
+
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+	CloseableHttpResponse getResponse = null;
+	try {
+	    getResponse = httpclient.execute(getRequest);
+	    final HttpEntity responseEntity = getResponse.getEntity();
+	    if (responseEntity != null) {
+		final ListPadsResponse listPadsResponse = objectMapper.readValue(responseEntity.getContent(),
+			ListPadsResponse.class);
+		if (!OK_STATUS.equals(listPadsResponse.getStatus())) {
+		    throw new CoderpadException(listPadsResponse.getMessage());
+		}
+		return listPadsResponse;
+	    } else {
+		throw new CoderpadException("Empty response from Coderpad");
+	    }
+	} catch (Exception e) {
+	    throw new CoderpadException("Error listing pads on Coderpad", e);
+	} finally {
+	    try {
+		if (getResponse != null)
+		    getResponse.close();
+	    } catch (IOException e) {
+		// ignore
+	    }
+	}
     }
 
     /**
@@ -159,26 +303,27 @@ public class CoderpadClient {
      * @param request
      * @return
      */
-    private MultivaluedHashMap<String, String> createMultiValuedMapForPadRequest(PadRequest request) {
+    private List<NameValuePair> createHttpFormForPadRequest(PadRequest request) {
+	List<NameValuePair> form = new ArrayList<NameValuePair>();
+
 	// set form fields, using defaults when appropriate
-	MultivaluedHashMap<String, String> form = new MultivaluedHashMap<String, String>();
 	if (request.getTitle() != null) {
-	    form.add("title", request.getTitle());
+	    form.add(new BasicNameValuePair("title", request.getTitle()));
 	}
 	if (request.getLanguage() != null) {
-	    form.add("language", request.getLanguage().toString());
+	    form.add(new BasicNameValuePair("language", request.getLanguage().toString()));
 	}
 	if (request.getContents() != null && request.getContents().length() > 0) {
-	    form.add("contents", request.getContents());
+	    form.add(new BasicNameValuePair("contents", request.getContents()));
 	}
 	if (request.isLocked()) {
-	    form.add("locked", Boolean.TRUE.toString());
+	    form.add(new BasicNameValuePair("locked", Boolean.TRUE.toString()));
 	}
 	if (request.isPrivatePad()) {
-	    form.add("private", Boolean.TRUE.toString());
+	    form.add(new BasicNameValuePair("private", Boolean.TRUE.toString()));
 	}
 	if (request.isExecutionEnabled() == false) {
-	    form.add("execution_enabled", Boolean.FALSE.toString());
+	    form.add(new BasicNameValuePair("execution_enabled", Boolean.FALSE.toString()));
 	}
 	return form;
     }

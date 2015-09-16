@@ -161,9 +161,11 @@ public class PadResponse extends BaseResponse {
     @Override
     public String toString() {
 	return "PadResponse [id=" + id + ", title=" + title + ", language=" + language + ", participants="
-	       + participants + ", contents=" + contents + ", events=" + events + ", locked=" + locked + ", privatePad="
-	       + privatePad + ", executionEnabled=" + executionEnabled + ", createdAt=" + createdAt + ", updatedAt="
-	       + updatedAt + ", editingUrl=" + editingUrl + ", playbackUrl=" + playbackUrl + ", historyUrl="
-	       + historyUrl + ", hangoutUrl=" + hangoutUrl + "]";
+		+ participants + ", contents=" + contents + ", events=" + events + ", locked=" + locked
+		+ ", privatePad=" + privatePad + ", executionEnabled=" + executionEnabled + ", createdAt=" + createdAt
+		+ ", updatedAt=" + updatedAt + ", editingUrl=" + editingUrl + ", playbackUrl=" + playbackUrl
+		+ ", historyUrl=" + historyUrl + ", hangoutUrl=" + hangoutUrl + ", status=" + getStatus() + ", message="
+		+ getMessage() + "]";
     }
 }
+  

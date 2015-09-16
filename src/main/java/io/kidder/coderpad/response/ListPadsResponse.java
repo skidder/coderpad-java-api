@@ -37,6 +37,7 @@ public class ListPadsResponse extends BaseResponse {
 
     @Override
     public String toString() {
-	return "ListPadsResponse [pads=" + pads + ", nextPageUrl=" + nextPageUrl + ", total=" + total + "]";
+	return "ListPadsResponse [pads=" + pads + ", nextPageUrl=" + nextPageUrl + ", total=" + total + ", status="
+		+ getStatus() + ", message=" + getMessage() + "]";
     }
 }

@@ -10,4 +10,8 @@ public class CoderpadException extends Exception {
     public CoderpadException(String message) {
 	super(message);
     }
+
+    public CoderpadException(String message, Throwable cause) {
+	super(message, cause);
+    }
 }
